@@ -1,13 +1,13 @@
 # USAGE
 # python detect_mask_video.py
 
-import numpy as np
-import torch
-import torchvision
-import matplotlib.pyplot as plt
-from time import time
-from torchvision import datasets, transforms
-from torch import nn, optim
+# import numpy as np
+# import torch
+# import torchvision
+# import matplotlib.pyplot as plt
+# from time import time
+# from torchvision import datasets, transforms
+# from torch import nn, optim
 
 # import the necessary packages
 # from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
@@ -20,69 +20,72 @@ import imutils
 import time
 import cv2
 import os
+import tensorflow as tf
 
-if torch.cuda.is_available():  
-  dev = "cuda:0" 
-else:  
-  dev = "cpu"  
-device = torch.device(dev)  
+# os.environ['DISPLAY'] = ':0'
 
-# Create CNN Model
-class CNNModel(nn.Module):
-    def __init__(self):
-        super(CNNModel, self).__init__()
+# if torch.cuda.is_available():  
+#   dev = "cuda:0" 
+# else:  
+#   dev = "cpu"  
+# device = torch.device(dev)  
+
+# # Create CNN Model
+# class CNNModel(nn.Module):
+#     def __init__(self):
+#         super(CNNModel, self).__init__()
         
-        # Convolution 1
-        self.cnn1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=5, stride=1, padding=0)
-        self.relu1 = nn.ReLU()
+#         # Convolution 1
+#         self.cnn1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=5, stride=1, padding=0)
+#         self.relu1 = nn.ReLU()
         
-        # Max pool 1
-        self.maxpool1 = nn.MaxPool2d(kernel_size=2)
+#         # Max pool 1
+#         self.maxpool1 = nn.MaxPool2d(kernel_size=2)
      
-        # Convolution 2
-        self.cnn2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=5, stride=1, padding=0)
-        self.relu2 = nn.ReLU()
+#         # Convolution 2
+#         self.cnn2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=5, stride=1, padding=0)
+#         self.relu2 = nn.ReLU()
         
-        # Max pool 2
-        self.maxpool2 = nn.MaxPool2d(kernel_size=2)
+#         # Max pool 2
+#         self.maxpool2 = nn.MaxPool2d(kernel_size=2)
 
-        # Convolution 3
-        self.cnn3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=0)
-        self.relu3 = nn.ReLU()
+#         # Convolution 3
+#         self.cnn3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=0)
+#         self.relu3 = nn.ReLU()
         
-        # Max pool 2
-        self.maxpool3 = nn.MaxPool2d(kernel_size=2)
+#         # Max pool 2
+#         self.maxpool3 = nn.MaxPool2d(kernel_size=2)
         
-        # Fully connected 1
-        self.fc1 = nn.Linear(64 * 12 * 12, 64) 
-        self.relu4 = nn.ReLU()
-        self.fc2 = nn.Linear(64, 2)
+#         # Fully connected 1
+#         self.fc1 = nn.Linear(64 * 12 * 12, 64) 
+#         self.relu4 = nn.ReLU()
+#         self.fc2 = nn.Linear(64, 2)
     
-    def forward(self, x):
-        # Set 1
-        out = self.cnn1(x)
-        out = self.relu1(out)
-        out = self.maxpool1(out)
+#     def forward(self, x):
+#         # Set 1
+#         out = self.cnn1(x)
+#         out = self.relu1(out)
+#         out = self.maxpool1(out)
         
-        # Set 2
-        out = self.cnn2(out)
-        out = self.relu2(out)
-        out = self.maxpool2(out)
+#         # Set 2
+#         out = self.cnn2(out)
+#         out = self.relu2(out)
+#         out = self.maxpool2(out)
 
-        # Set 3
-        out = self.cnn3(out)
-        out = self.relu3(out)
-        out = self.maxpool3(out)
+#         # Set 3
+#         out = self.cnn3(out)
+#         out = self.relu3(out)
+#         out = self.maxpool3(out)
         
-        #Flatten
-        out = out.view(out.size(0), -1)
+#         #Flatten
+#         out = out.view(out.size(0), -1)
 
-        #Dense
-        out = self.fc1(out)
-        out = self.relu4(out)
-        out = self.fc2(out)
+#         #Dense
+#         out = self.fc1(out)
+#         out = self.relu4(out)
+#         out = self.fc2(out)
         
-        return out
+#         return out
 
 def detect_and_predict_mask(frame, faceNet, maskNet):
 	# grab the dimensions of the frame and then construct a blob
@@ -124,7 +127,7 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
 			# ordering, resize it to 224x224, and preprocess it
 			face = frame[startY:endY, startX:endX]
 			face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-			face = cv2.resize(face, (128, 128))
+			face = cv2.resize(face, (300, 300))
 			face = np.array(face)
 			# face = preprocess_input(face)
 
@@ -138,8 +141,9 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
 		# for faster inference we'll make batch predictions on *all*
 		# faces at the same time rather than one-by-one predictions
 		# in the above `for` loop
-		faces = np.array(faces, dtype="float32").transpose(0,3,1,2)
-		faces = torch.tensor(faces).contiguous().to(device)
+		# faces = np.array(faces, dtype="float32").transpose(0,3,1,2)
+		# faces = torch.tensor(faces).contiguous().to(device)
+		faces = np.array(faces)
 		# print(faces.shape)
 		preds = maskNet(faces)
 
@@ -153,7 +157,7 @@ ap.add_argument("-f", "--face", type=str,
 	default="face_detector",
 	help="path to face detector model directory")
 ap.add_argument("-m", "--model", type=str,
-	default="model/model.pt",
+	default="model/my_model",
 	help="path to trained face mask detector model")
 ap.add_argument("-c", "--confidence", type=float, default=0.5,
 	help="minimum probability to filter weak detections")
@@ -169,8 +173,8 @@ faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
 # load the face mask detector model from disk
 print("[INFO] loading face mask detector model...")
 # maskNet = load_model(args["model"])
-maskNet = torch.load(args["model"])
-maskNet.eval()
+maskNet = tf.keras.models.load_model(args["model"])
+# maskNet.eval()
 
 # initialize the video stream and allow the camera sensor to warm up
 print("[INFO] starting video stream...")
