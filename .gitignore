@@ -2,6 +2,6 @@
 /.ipynb*
 /.vscode
 /.ipynb_checkpoints
-/*.ipynb_checkpoints*
+/*/*.ipynb_checkpoints*
 
 nohup.out

@@ -1,75 +1,84 @@
 let video;
-let poseNet;
-let poses = [];
+let classifier;
+let model;
+let modelURL = 'tfjsv3/model.json';
+let label = "waiting...";
+let model_git = 'https://github.com/durbin-164/Face_Mask_Detection/blob/master/model/tfjsv3/model.json'
+
 
 function setup() {
-    const t1 = tf.tensor([1,2,3,4,2,4,6,8]);
-    console.log(t1)
-  const canvas = createCanvas(640, 480);
-  canvas.parent('videoContainer');
-
-  // Video capture
+  createCanvas(640, 520);
+  // Create the video
   video = createCapture(VIDEO);
-  video.size(width, height);
-
-//   // Create a new poseNet method with a single detection
-//   poseNet = ml5.poseNet(video, modelReady);
-//   // This sets up an event that fills the global variable "poses"
-//   // with an array every time new poses are detected
-//   poseNet.on('pose', function(results) {
-//     poses = results;
-//     // console.log(poses)
-//   });
-  
-  // Hide the video element, and just show the canvas
   video.hide();
+
+  console.log("call classfy")
+  // model = await tf.loadLayersModel(modelURL)
+  // classifier =  ml5.imageClassifier("MobileNet", video, modelReady);
+  // // classifier = await tf.loadLayersModel(model_git)
+  // console.log(classifier)
+
+  const featureExtractor = ml5.featureExtractor("MobileNet", modelLoaded);
+
+// Create a new classifier using those features and with a video element
+  classifier = featureExtractor.classification(video, videoReady);
+
+  // STEP 2.1: Start classifying
+  
+}
+
+// STEP 2.2 classify!
+function classifyVideo() {
+    console.log("hello classifyVideo")
+  classifier.classify( gotResults);
+}
+
+
+
+
+// When the model is loaded
+function modelLoaded() {
+  console.log("Model Loaded!");
+  classifier.load(modelURL, customModelReady)
+}
+
+
+// Triggers when the video is ready
+function videoReady() {
+  console.log("The video is ready!");
+  
+}
+
+function customModelReady(){
+  console.log("custom model ready");
+  classifyVideo();
 }
 
 function draw() {
-    console.log(width);
-    console.log(height);
-    console.log(typeof(video))
-  image(video, 0, 0, width, height);
+  background(0);
+  
+  // Draw the video
+  image(video, 0, 0);
 
-  // We can call both functions to draw all keypoints and the skeletons
-//   drawKeypoints();
-//   drawSkeleton();
+  // STEP 4: Draw the label
+  textSize(32);
+  textAlign(CENTER, CENTER);
+  fill(255);
+  text(label, width / 2, height - 16);
 }
 
-function modelReady(){
-  select('#status').html('model Loaded')
-}
 
-// A function to draw ellipses over the detected keypoints
-function drawKeypoints()  {
-  // Loop through all the poses detected
-  for (let i = 0; i < poses.length; i++) {
-    // For each pose detected, loop through all the keypoints
-    let pose = poses[i].pose;
-    for (let j = 0; j < pose.keypoints.length; j++) {
-      // A keypoint is an object describing a body part (like rightArm or leftShoulder)
-      let keypoint = pose.keypoints[j];
-      // Only draw an ellipse is the pose probability is bigger than 0.2
-      if (keypoint.score > 0.2) {
-        fill(255, 0, 0);
-        noStroke();
-        ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
-      }
-    }
+// STEP 3: Get the classification!
+function gotResults(error, results) {
+  // Something went wrong!
+  console.log("in got results")
+  if (error) {
+    console.error(error);
+    return;
   }
-}
-
-// A function to draw the skeletons
-function drawSkeleton() {
-  // Loop through all the skeletons detected
-  for (let i = 0; i < poses.length; i++) {
-    let skeleton = poses[i].skeleton;
-    // For every skeleton, loop through all body connections
-    for (let j = 0; j < skeleton.length; j++) {
-      let partA = skeleton[j][0];
-      let partB = skeleton[j][1];
-      stroke(255, 0, 0);
-      line(partA.position.x, partA.position.y, partB.position.x, partB.position.y);
-    }
-  }
+  console.log(results)
+  // Store the label and classify again!
+  label = results[0].label;
+  console.log(results[0].label);
+  classifyVideo();
 }
