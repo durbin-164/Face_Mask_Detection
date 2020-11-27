@@ -53,7 +53,7 @@ function getResult(){
         }catch(error){}
         
         
-        image = tf.image.resizeBilinear(image, [300,300]).reshape([-1,300,300,3])
+        image = tf.image.resizeBilinear(image, [224,224]).reshape([-1,224,224,3])
         let result = model.predict(image)
         result = result.dataSync();
 
